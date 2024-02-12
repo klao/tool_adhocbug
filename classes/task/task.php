@@ -42,9 +42,8 @@ class task extends \core\task\adhoc_task
         set_status('running');
 
         try {
-            $moduleid = intval(get_config('tool_adhocbug', 'task_moduleid'));
-
-            $cm = get_coursemodule_from_id('quiz', $moduleid, 0, false, MUST_EXIST);
+            global $DB;
+            $cm = $DB->get_record_sql('SELECT * FROM {course_modules} LIMIT 1');
             $course = get_course($cm->course);
 
             // This fails with `Class "grade_item" not found` if run from `admin/cli/adhoc_task.php --execute --keep-alive=59`,
@@ -52,9 +51,13 @@ class task extends \core\task\adhoc_task
             $modinfo_data = get_moduleinfo_data($cm, $course);
 
             echo '<pre>';
+            print_r($cm);
+            print_r($course);
             print_r($modinfo_data);
             echo '</pre>';
         } catch (\Exception $e) {
+            // When run from `admin/cli/adhoc_task.php --execute --keep-alive=59`, the failure is a fatal error,
+            // so there is no exception and no way to recover.
             set_status($e->getMessage());
             return;
         }

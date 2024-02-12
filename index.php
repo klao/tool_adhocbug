@@ -25,16 +25,11 @@
 require_once(__DIR__ . '/../../../config.php');
 require_once($CFG->dirroot . '/course/modlib.php');
 
-$moduleid = optional_param('moduleid', 2, PARAM_INT);
-$postmoduleid = optional_param('postmoduleid', null, PARAM_INT);
-$urlParams = [];
-if ($moduleid) {
-    $urlParams['moduleid'] = $moduleid;
-}
+$ispost = optional_param('ispost', null, PARAM_INT);
 
 $context = context_system::instance();
 $PAGE->set_context($context);
-$PAGE->set_url('/admin/tool/adhocbug/index.php', $urlParams);
+$PAGE->set_url('/admin/tool/adhocbug/index.php');
 $PAGE->set_pagelayout('standard');
 $PAGE->set_title('Ad-hoc task bug testing');
 $PAGE->set_heading('Ad-hoc task bug testing');
@@ -43,7 +38,6 @@ echo $OUTPUT->header();
 
 // Display task status:
 echo $OUTPUT->heading('Task status');
-$taskmoduleid = get_config('tool_adhocbug', 'task_moduleid');
 $taskstatus = get_config('tool_adhocbug', 'task_status');
 if (!$taskstatus) {
     $taskstatus = 'unknown';
@@ -55,8 +49,7 @@ if ($tasklastupdate) {
     $tasklastupdate = get_string('never');
 }
 
-echo "<p>Task module id: $taskmoduleid<br>";
-echo "Status: $taskstatus<br>";
+echo "<p>Status: $taskstatus<br>";
 echo "Last update: $tasklastupdate</p>";
 echo '<hr>';
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -64,32 +57,35 @@ echo '<hr>';
 // Display form:
 echo $OUTPUT->heading('Run ad-hoc task');
 echo '<form action="index.php" method="post">';
-echo '<input type="hidden" name="postmoduleid" value="' . $moduleid . '">';
+echo '<input type="hidden" name="ispost" value="1">';
 echo '<input type="submit" value="Run task">';
 echo '</form>';
 
-if ($postmoduleid) {
-    set_config('task_moduleid', $postmoduleid, 'tool_adhocbug');
+if ($ispost) {
     set_config('task_status', 'scheduled', 'tool_adhocbug');
     set_config('task_last_update', time(), 'tool_adhocbug');
 
     $task = new \tool_adhocbug\task\task();
     \core\task\manager::queue_adhoc_task($task);
 
-    redirect(new moodle_url('/admin/tool/adhocbug/index.php', ['moduleid' => $postmoduleid]));
+    redirect(new moodle_url('/admin/tool/adhocbug/index.php'));
 }
 
 echo '<hr>';
 ////////////////////////////////////////////////////////////////////////////////////////
 
-$cm = get_coursemodule_from_id('quiz', $moduleid, 0, false, MUST_EXIST);
+// Look up the first course module in the database:
+$cm = $DB->get_record_sql('SELECT * FROM {course_modules} LIMIT 1');
+
+// $cm = get_coursemodule_from_id('quiz', $moduleid, 0, false, MUST_EXIST);
 $course = get_course($cm->course);
 
 // This works correctly:
 $modinfo_data = get_moduleinfo_data($cm, $course);
 
 echo '<pre>';
-print_r($modinfo_data[4]);
+print_r($cm);
+print_r($modinfo_data[2]);
 echo '</pre>';
 
 echo $OUTPUT->footer();
