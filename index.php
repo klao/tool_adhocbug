@@ -74,17 +74,23 @@ if ($ispost) {
 echo '<hr>';
 ////////////////////////////////////////////////////////////////////////////////////////
 
+// This is the "functionality" that the ad-hoc task is supposed to perform:
+
 // Look up the first course module in the database:
 $cm = $DB->get_record_sql('SELECT * FROM {course_modules} LIMIT 1');
 
-// $cm = get_coursemodule_from_id('quiz', $moduleid, 0, false, MUST_EXIST);
+// Look up the course that the module belongs to:
 $course = get_course($cm->course);
 
-// This works correctly:
+// Get the module info data.
+// This works correctly here in this page and in the ad-hoc task when run from the regular cron job,
+// but fails with `Class "grade_item" not found` if run from `admin/cli/adhoc_task.php --execute --keep-alive=59`.
 $modinfo_data = get_moduleinfo_data($cm, $course);
 
 echo '<pre>';
+echo "\nCourse module:\n";
 print_r($cm);
+echo "\nModule info data (part):\n";
 print_r($modinfo_data[2]);
 echo '</pre>';
 

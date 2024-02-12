@@ -51,8 +51,11 @@ class task extends \core\task\adhoc_task
             $modinfo_data = get_moduleinfo_data($cm, $course);
 
             echo '<pre>';
+            echo "\nCourse module:\n";
             print_r($cm);
+            echo "\nCourse:\n";
             print_r($course);
+            echo "\nModule info data:\n";
             print_r($modinfo_data);
             echo '</pre>';
         } catch (\Exception $e) {
